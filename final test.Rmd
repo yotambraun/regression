@@ -1,0 +1,282 @@
+---
+title: "final test"
+author: " Yotam braun 309914646"
+date: "JULY 29, 2019"
+output: html_document
+---
+#It was at  saturday
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(dplyr) #for genral operation
+library(reader) # for question 1 for reading the data
+library(stringr)# for string operations
+library(ggplot2)# for the hist plot 
+```
+
+#part 1:
+
+**read file CSV accidents**
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+setwd("C:/R/r/final test/")
+accidents<- as.data.frame(read.csv("C:/R/r/final test/accidents.csv",encoding = "UTF-8"))
+
+```
+
+
+**2.1: 2.1.1+2.1.2 we can see that there are 33 id numbers that are duplicted**
+**Max repeate 2**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+id <-accidents$id[duplicated(accidents$id)]
+length(id)
+max(length(rle(accidents$id)))
+dup_id <-accidents$id[duplicated(accidents$id) | duplicated(accidents$id, fromLast=TRUE)]
+head(dup_id)
+  
+```
+
+#part 2:
+**2.1.3 new dataframe without the duplicted id**
+**I used the distinct func to ignore the duplicate**
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+new_acc<- distinct(accidents,id,.keep_all = TRUE)
+
+```
+
+**2.2.1+2.2.2**
+**I made a function that check if the data in the fild of accident_hour is valid or not and i used with strigr options of extracting and detecting, i dont know where is my problem on the function but i cant used those vectors, please consider on that.** 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+valid_value_hour<-c()
+not_valid_hour <-c()
+check_15_dif <- function(new_acc){
+  for(i in 1:length(new_acc$accident_hour)){
+  detc_patt <- c(str_detect(new_acc$accident_hour[i],pattern = "^\\d{2}:\\d{2}-\\d{2}:\\d{2}"))
+  dif <- c( abs(as.numeric(str_extract(new_acc$accident_hour[i],pattern = "(?<=-)\\d{2}:d{2}$"))-as.numeric(str_extract(new_acc$accident_hour[i],pattern = "^\\d{2}:\\d{2}(?=-)$"))))
+  if(detc_patt[i]==TRUE& as.numeric(dif[i])==14){
+    valid_value_hour<- valid_value_hour(valid_value_hour,TRUE)
+    return(valid_value_hour)
+  
+  }
+  
+  if(detc_patt[i]==FALSE |as.numeric(dif[i]!=14)){
+    if(is.na(new_acc$accident_hour[i]==TRUE)){
+      not_valid_hour<-not_valid_hour(not_valid_hour,NA)
+      return(not_valid_hour)
+    
+    }
+    not_valid_hour<-not_valid_hour(not_valid_hour,FALSE)
+    return(not_valid_hour)
+  }  
+  }
+  }
+  
+  
+
+   
+
+
+
+
+
+```
+
+#part 3:
+**3.1 accident_severity**
+**We can see some trend that from 2014 until now with some excluding bar that the trend is incresing on the xlab we can see how the rough cases of accidents is consistent across the year pass by, it is logical because we can assume that there are more cars on the rodas** 
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+levels(new_acc$accident_severity)
+new_acc_sev <- new_acc[ !(new_acc$accident_severity=="קלה"),]
+ggplot(data = new_acc_sev) +geom_bar(aes(accident_year),width = 0.6) +
+  ggtitle(label =   "numbers of accident without the soft case by years") + xlab(label = "year") +
+  ylab(label = "count")
+
+
+```
+**3.2**
+**We can see that there is no connection between the the crossing people and the increasing of the accidents with the years passing by, without we can see a huge increasing and with it almost flat **
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+  ggplot(data=new_acc_sev) +geom_bar(aes(accident_year,fill=(accident_type==1)),position = "Dodge") +theme(legend.title = element_text(size = 10,face = "bold"), legend.background = element_rect(fill="lightblue", 
+                                  size=0.5, linetype="solid")) +xlab(label = "year") +
+  ylab(label = "count")+theme(title = element_text( "numbers of not soft acc with and without the crossing people"))
+
+
+```
+
+#part 4:
+**4.1**
+**in red we can see the lethal accidents across the country and the grey it just all the coordintes in the country**
+**it seems really scatter**
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+plot(new_acc$longitude,new_acc$latitude,xlab = "longitude",ylab ="latitude",main = "plot of longitude vs latitude with all the accidents(wiht red lethal)",col ="grey" )
+points(new_acc$longitude[new_acc$accident_severity=="קטלנית"],
+                         new_acc$latitude[new_acc$accident_severity=="קטלנית"],
+col ="red",pch = 16, cex = 1)
+
+```
+
+**4.2**
+**I found that דיזנגוף is the street from all the streets with minmum 100 accident on them, i cacaulate that street from the table of all the lethal accidents and with the streets with a name **
+**on blue line we can see the dizinguf street with all the lethal accidents on red points**
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+find_st_max <- names(which.max(table(new_acc$street1_hebrew[new_acc$accident_type==1&new_acc$street1!=-1
+],exclude = nrow(new_acc$street1_hebrew[new_acc$street1_hebrew])<100)))
+
+plot(new_acc$longitude,new_acc$latitude,xlab = "longitude",ylab ="latitude",main = "plot of longitude vs latitude with all the accidents(with red lethal)",col ="grey" )
+points(new_acc$longitude[new_acc$accident_severity=="קטלנית"],
+                         new_acc$latitude[new_acc$accident_severity=="קטלנית"],
+col ="red",pch = 16, cex = 1) + points( x= new_acc$longitude[new_acc$street1_hebrew==find_st_max],
+       y = new_acc$latitude[new_acc$street1_hebrew==find_st_max],
+col ="blue",pch = 16, cex = 1) 
+
+
+
+
+
+```
+#part 5:
+**5.1**
+**For eache date i cacaulate the sum of daily accidents**
+**I made a ggplot for those values and we can see that the curve above the histogram is aprox normallity **
+**For extra check i did a shapiro.test for those values W = 0.99122, p-value = 0.6473 those results are storng evidence for normality checking**
+**for more explorring i did qqnorm for the the freq of those dates**
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+new_acc$date = paste0(new_acc$accident_day,".", new_acc$accident_month,".", new_acc$accident_year)
+new_acc$date = ISOdate(as.numeric(new_acc$accident_year)
+                          , as.numeric(new_acc$accident_month),as.numeric(new_acc$accident_day))
+freq_date = as.data.frame(table(new_acc$date))
+ggplot(freq_date,aes(x=Freq))+geom_histogram(data = freq_date, aes(Freq, y=..density..), bins=14, colour="blue") + 
+  stat_function(fun = dnorm, args = list(mean = mean(freq_date $Freq ), sd = sd(freq_date $Freq)), col='red', size=0.8) +
+  labs(title = "Frequency accidents of a day")
+qqnorm(freq_date$Freq)
+set.seed(120)
+shapiro.test(rnorm(120,mean = mean(freq_date$Freq),sd = sd(freq_date$Freq)))
+
+
+```
+
+**5.2**
+**First i filtring just sunday from new_acc(without dup values) and then i made those values to freq for caculating after, i made an middle on the data with slicing the nrow of the data for 2 parts for getting the median, i took the vector of sun_freq until the median and after the median and cacaulate the meidan of eache part and the range of thouse median of those parts are the interquartile range **
+** the IQR [16,19]**
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+only_sun<-  new_acc %>% filter(day_in_week_hebrew == "ראשון")
+freq_of_sun <- as.data.frame(table(only_sun$date))
+emtcha <- nrow(freq_of_sun)/2 #caculate median
+bef_median <- freq_of_sun$Freq[1:emtcha] #part 1 until the median
+aft_median<- freq_of_sun$Freq[(emtcha+1):nrow(freq_of_sun)] #part 2 after the median
+q1 <- median(bef_median)
+q3 <- median(aft_median)
+iqr<- range(q1,q3) #IQR
+iqr
+```
+
+**5.3**
+**Now here i neede to prepare the data for the montacarlo simultaion after, so i filterd the friday and make the freq of sunday as a vector and for firday too, i made a function that that get x and y and sampling them and with condition checking who is bigger and after there is a function that get  a SD for input and replicate the function form past and with the freq of sunday and friday**
+**the  probailty that on friday there will be more accidents is 0.152 and the SD is 0.3592**
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+acc_sun <- as.vector(freq_of_sun$Freq)
+fri_d <- new_acc %>% filter(day_in_week_hebrew == "שישי")
+fri_d_freq<- as.data.frame(table(fri_d$date))
+acc_fri <- as.vector(fri_d_freq$Freq)
+
+func_sim = function(x, y){
+  z = sample(x, 1)
+  k = sample(y, 1)
+  if(k>z){return(TRUE)}
+  else{return(FALSE)}
+}
+sim_monta = function(B){check_who = replicate(B,func_sim(acc_sun, acc_fri))
+  check_days = as.data.frame(table(check_who))
+  check_op = check_days$Freq[2]/1000
+  sd_check_op = sd(check_who)
+  result = c(check_op, sd_check_op)
+  return(result)
+}
+set.seed(1000)
+sim_monta(1000)
+
+```
+
+
+**5.4 T test**
+**I made an one side T test for the smpling of friday and sunday  9 times first manually and then automatically T test for double checking**
+**the result is 0.999872 by hand without the montecarlo func and with the function is 1 , is also made automatically T test but without the replicte of 200 times for just comparnnig** 
+*the sd of the coefficient on that 0.3628129, df is 16 (18-2)**
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+set.seed(1000)
+sun <- sample(table(only_sun$date),9)
+fri <- sample(table(fri_d$date),9)
+s <- sqrt((var(sun)+var(fri))/2)
+t <- ((mean(sun)-mean(fri))+1)/(s*sqrt(2/9))
+pt <- pt(t,16) #18 samples less 2 vectors
+pt 
+t_t<-t.test(sun,fri,conf.level = 0.95,alternative = "less",var.equal = TRUE) # check automutcaly
+
+func_sim = function(x, y){
+  z = sample(x, 9)
+  k = sample(y, 9)
+  if(k>z){return(TRUE)}
+  else{return(FALSE)}}
+sim_monta = function(B){check_who = replicate(B,func_sim(acc_sun, acc_fri))
+  check_days = as.data.frame(table(check_who))
+  check_op = check_days$Freq[2]/1000
+  sd_check_op = sd(check_who)
+  result = c(check_op, sd_check_op)
+  return(result)}
+sim_monta(200)
+s_2<-0.367526
+t<- ((mean(sun)-mean(fri))+1)/(s_2*sqrt(2/9))
+pt_2<- pt(t,16)
+pt_2
+
+
+
+```
+#part 6:
+**6 open Q**
+**I made a little resarch across the data and i zoom in on cross_loc of 3 and 4 because they means that for 3 is the accident was with a cross without a traffic_light and for 4 is the same but with a traffic_light.**
+**I also zoom in on with  a day and night with connection**
+*on my search i made an linear regression for some combinations of my data zoom in**
+**x is an lm of cross_location==3(without lights traf)~ new_acc$day_night==5 (night) i try to understand if there is a corrleation and there is more cross_loc =3 if it is at night but it is a small connection**
+**then i did it with a day light but it is the same**
+**then i did those same caculationg but with cross_loc = 4 so with traffic light when they cross, again a small correllation**
+**i didnt expect for those resulst becuase it is logical to think that if the people crossing and there is no traffic light and it is at night there must be a storng conecctions between them **
+**but if we do lm for id~(cross_location==3/4)+traffic_light+(day_night==5) to understand more genrally the connections of those is really strong , the estimte of cross_loc =3 on that linear regession is 124069 and we know understnad that the accidents without traffic light at night are highly damage us**
+
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+c<-as.numeric(new_acc$traffic_light)
+b<-as.numeric(new_acc$cross_location)
+d<-as.numeric(new_acc$day_night)
+
+corss_no_trafic_light_day <-new_acc %>% filter(cross_location==3) %>% filter(day_night==1)
+corss_no_trafic_light_night <-new_acc %>% filter(cross_location==3) %>% filter(day_night==5)
+summary(corss_no_trafic_light_day$id)
+summary(corss_no_trafic_light_night$id)
+summary(new_acc$day_night)
+freq_traffic_light = as.data.frame(table(new_acc$traffic_light==9))
+freq_cross_loc =as.data.frame(table(new_acc$cross_location==3))
+freq_day_night =as.data.frame(table(new_acc$day_night==5))
+summary(freq_cross_loc$Freq)
+x<- lm(new_acc$cross_location==3~ new_acc$day_night==5)
+y<-lm(new_acc$cross_location==3~ new_acc$day_night==1)
+summary(lm(x))
+summary(lm(y))
+
+corss_with_trafic_light_day <-new_acc %>% filter(cross_location==4) %>% filter(day_night==1)
+corss_with_trafic_light_night <-new_acc %>% filter(cross_location==4) %>% filter(day_night==5)
+summary(corss_with_trafic_light_day$id )
+summary(corss_with_trafic_light_night$id )
+z<- summary(lm(new_acc$cross_location==4~ new_acc$day_night==1))
+k<- summary(lm(new_acc$cross_location==4~ new_acc$day_night==5))
+z
+k
+
+v<-summary(lm(new_acc$id~(new_acc$cross_location==4)+new_acc$traffic_light+(new_acc$day_night==5)))
+v
+h<-summary(lm(new_acc$id~(new_acc$cross_location==3)+new_acc$traffic_light+(new_acc$day_night==5)))
+h
+```
+
+
+
+
