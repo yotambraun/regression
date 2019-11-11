@@ -1,4 +1,4 @@
-#שם:יותם בראון 309914646 שם:ענבר נחמיה 205434699
+
 library(datasets)
 View(mtcars)
 cars=mtcars
