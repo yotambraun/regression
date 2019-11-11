@@ -1,10 +1,4 @@
----
-title: "final test"
-author: " Yotam braun 309914646"
-date: "JULY 29, 2019"
-output: html_document
----
-#It was at  saturday
+
 ```{r echo=TRUE, message=FALSE, warning=FALSE}
 library(dplyr) #for genral operation
 library(reader) # for question 1 for reading the data
