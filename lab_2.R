@@ -4,7 +4,7 @@ library(ggplot2)
 library(tidyverse)
 library(gridExtra) #for the colors of lines at 5
 library(tidyr) #for func speard on 6
-diseases <- read.csv("C:/Users/Shira Rothmann/Desktop/R in statistic/diseases.txt")
+diseases <- read.csv("C:/Users/Yotam braun/Desktop/R in statistic/diseases.txt")
 
 #Part 1
 1.
